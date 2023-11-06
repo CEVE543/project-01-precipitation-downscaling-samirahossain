@@ -48,7 +48,8 @@ using NCDatasets
 using StatsBase: shuffle
 
 # find the "root" directory of your project
-HOMEDIR = abspath(dirname(@__FILE__))
+HOMEDIR = "C:\\Users\\Samira\\OneDrive\\Documents\\GitHub\\project-01-precipitation-downscaling-samirahossain" #"C:\\Users\\Samira"
+
 
 """
     download_single_level_data(year, filename, variable)
@@ -86,7 +87,7 @@ function download_single_level_data(
     variable::AbstractString;
     hours=0:23,
     resolution=1.0,
-    bbox=[50, -130, 24, -65],
+    bbox=[30, -95.75, 29.5, -95],
 )
     if isfile(filename)
         println("File $filename already exists. Skipping download.")
@@ -102,7 +103,7 @@ function download_single_level_data(
                      "year": "$year",
                      "month": $(["$(lpad(i, 2, '0'))" for i in 1:12]),
                      "day": $(["$(lpad(i, 2, '0'))" for i in 1:31]),
-                     "time": $(["$(lpad(hour, 2, '0')):00" for hour in hours]),
+                     "time": "00.00",
                      "area": $bbox,
                      "grid": ["$resolution", "$resolution"],
                      }"""),
@@ -269,38 +270,74 @@ end
 function run_demo()
 
     # the path to the raw data folder
-    data_dir = joinpath(HOMEDIR, "data", "raw")
+    data_dir = joinpath(HOMEDIR, "data", "raw1")
 
-    years = 2019:2020 # example time range
+    years = 1990:2020 # example time range
     for year in years
 
         # Download 2m air temperature for the year 2020
         download_single_level_data.(
-            year, joinpath(data_dir, "2m_temperature_$year.nc"), "2m_temperature"
+            year, joinpath(data_dir, "2m_dewpoint_temperature_$year.nc"), "2m_dewpoint_temperature"
         )
 
         # Download 500 hPa geopotential for the year 2020
-        level = 500
-        download_pressure_level_data.(
-            year,
-            joinpath(data_dir, "$(level)hPa_geopotential_$year.nc"),
-            "geopotential",
-            level,
-        )
+        
     end
 
     # read in all the 2m temperature data
-    fnames = shuffle(glob("2m_temperature", data_dir)) # shuffle -- should work even if out of order
-    t2m = open_mfdataset(fnames, "t2m") # we sort based on time, so we don't need to sort here
+    fnames = shuffle(glob("2m_dewpoint_temperature", data_dir)) # shuffle -- should work even if out of order
+d2m = open_mfdataset(fnames, raw"d2m") # we sort based on time, so we don't need to sort here
 
     # read in all the 500 hPa geopotential data
-    fnames = shuffle(glob("500hPa_geopotential", data_dir))
-    z500 = open_mfdataset(fnames, "z")
+    #fnames = shuffle(glob("500hPa_geopotential", data_dir))
+    #z500 = open_mfdataset(fnames, "z")
 
-    display(t2m)
-    display(z500)
+    display(d2m)
+    #display(z500)
 
     return nothing
 end
 
+
+# function run_samira()
+
+#     #start_year = 2017
+#     #end_year = 2019
+
+#     # the path to the raw data folder
+#     data_dir = joinpath(HOMEDIR, "data", "raw")
+
+#     years = 2012:2014 # example time range
+#     for year in years
+
+#         # Download 2m air temperature for the year 2020
+#         download_single_level_data.(
+#             year, joinpath(data_dir, "2m_temperature_$year.nc"), "2m_temperature"
+#         )
+
+#         # Download 500 hPa geopotential for the year 2020
+#         level = 500
+#         download_pressure_level_data.(
+#             year,
+#             joinpath(data_dir, "$(level)hPa_geopotential_$year.nc"),
+#             "geopotential",
+#             level,
+#         )
+#     end
+
+#     # read in all the 2m temperature data
+#     fnames = shuffle(glob("2m_temperature", data_dir)) # shuffle -- should work even if out of order
+#     t2m = open_mfdataset(fnames, "t2m") # we sort based on time, so we don't need to sort here
+
+#     # read in all the 500 hPa geopotential data
+#     fnames = shuffle(glob("500hPa_geopotential", data_dir))
+#     z500 = open_mfdataset(fnames, "z")
+
+#     display(t2m)
+#     display(z500)
+
+#     return nothing
+# end
+
 run_demo()
+#run_samira()
