@@ -32,10 +32,6 @@ using MultivariateStats
 using Plots
 using NCDatasets
 using StatsBase
-using Unitful
-using StatsPlots
-using GLM
-
 ```
 
 # Reading the data in and checking dimensions
