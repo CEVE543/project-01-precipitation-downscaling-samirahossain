@@ -1,0 +1,365 @@
+---
+title: "Project 1"
+subtitle: " Put subtitle here"
+jupyter: julia-1.9
+date: 2023-11-03
+# author: "Your name here (your netID here)" # UNCOMMENT AND ADD YOUR NAME
+
+number-sections: true
+code-annotations: hover
+
+kind: "Project"
+Module: "2"
+categories:
+    - "Module 2"
+    - "Project"
+
+format:
+    html: 
+        toc-depth: 3
+    docx: 
+        toc: true
+        toc-depth: 3
+        fig-format: png
+---
+
+
+# Packages needed
+```{julia}
+#| output: false
+using Dates
+using MultivariateStats
+using Plots
+using NCDatasets
+using StatsBase
+using Unitful
+using StatsPlots
+using GLM
+
+```
+
+# Reading the data in and checking dimensions
+
+```{julia}
+observedprecip_ds= NCDataset("data/precip_data_Houston/precip_tx.nc") #Storing predictand in observedprecip_ds
+
+display(observedprecip_ds) #seeing how many attributes it has, check how many dimensions it has
+obprecip_time=observedprecip_ds["time"][:]
+obprecip_lon=observedprecip_ds["lon"][:]
+obprecip_lat=observedprecip_ds["lat"][:]
+obprecip=observedprecip_ds["precip"][:,:,:]
+display(obprecip_lat)
+display(obprecip_lon)
+display(obprecip_time[1])
+
+obprecip_lat=reverse(obprecip_lat)
+obprecip=reverse(obprecip;dims=2)
+
+heatmap(obprecip_lon,obprecip_lat,obprecip[:,:,1];xlabel="Longitude",ylabel="Latitude",title="Precip on $(obprecip_time[1]))")
+```
+
+
+```{julia}
+start_date=Date(1990,1,1)
+end_date=Date(2020,12,31)
+time=Dates.Date.(obprecip_time)
+display(time)
+# display()
+time_indices = findall(start_date .<= time .<= end_date)
+display(time_indices)
+obprecip_subset=obprecip[:,:,time_indices]
+
+#display(obprecip_subset_time[1])
+
+heatmap(obprecip_lon,obprecip_lat,obprecip_subset[:,:,1];xlabel="Longitude",ylabel="Latitude",title="Precip on first day of 1990")
+# obprecip_time_subset=obprecip_time[time_indices]
+
+# println(size(obprecip_subset))
+#we only need 30 years of data, 1990 to 2020, so we can make a new variable called y_precip and store the data of 1990 to 2020 here.
+#precip_y=
+#we need 20 years of data to train, we keep the remaining 10 years of data as test
+
+#Now the predictor variables
+#temp_ds= NCDataset()  #we combine the 30 years of data we downloaded
+#temp_lon=
+#temp_lat=
+#temp_time=
+
+
+#dewtemp_ds=
+#dewtemp_lon
+#dewtemp_lat
+#dewtemp_time          
+
+#check dimensions and everything
+#split to train and test
+
+
+```
+
+
+# Data merging
+```{julia}
+temp2020_ds= NCDataset("data/raw/2m_temperature_2020.nc") 
+#temp1991_ds= NCDataset("data/raw/2m_temperature_1991.nc") 
+
+```
+
+```{julia}
+function open_mfdataset(files::Vector{String}, variable_name::AbstractString)
+
+    # Lists to store variable data, time data, and other coordinate data
+    var_data_list = []
+    time_data_list = []
+    coords_data_dict = Dict()
+
+    # Open the first file to get the coordinate names (excluding time and the main variable)
+    ds = Dataset(files[1])
+    dimnames = keys(ds.dim)
+    coord_names = setdiff(collect(dimnames), [variable_name, "time"])
+    close(ds)
+
+    # Initialize lists for each coordinate in coords_data_dict
+    for coord in coord_names
+        coords_data_dict[coord] = []
+    end
+
+    # Open each file, extract data, and store in lists
+    for file in files
+        ds = Dataset(file)
+
+        # Store variable and time data
+        push!(var_data_list, ds[variable_name][:])
+        push!(time_data_list, ds["time"][:])
+
+        # Store other coordinate data
+        for coord in coord_names
+            push!(coords_data_dict[coord], ds[coord][:])
+        end
+
+        close(ds)
+    end
+
+    # Pair variable data with time data and sort by time
+    sorted_pairs = sort(collect(zip(time_data_list, var_data_list)); by=x -> x[1])
+    sorted_time_data = [pair[1] for pair in sorted_pairs]
+    sorted_var_data = [pair[2] for pair in sorted_pairs]
+
+    # Concatenate sorted data
+    concatenated_data_dict = Dict(
+        variable_name => vcat(sorted_var_data...), "time" => vcat(sorted_time_data...)
+    )
+
+    # Concatenate coordinate data and add to the dictionary
+    for coord in coord_names
+        concatenated_data_dict[coord] = vcat(coords_data_dict[coord]...)
+    end
+
+    return concatenated_data_dict
+end
+
+#Check for missing values in them
+#Check spatial and temporal dimensions, if it matches with your y dimensions
+
+
+#Split for test and train sets
+
+```
+
+
+# Data merge
+```{julia}
+
+using CDSAPI
+using NCDatasets
+using StatsBase: shuffle
+base_path="data/raw"
+files = ["2m_temperature_1990.nc", "2m_temperature_1991.nc", "2m_temperature_1992.nc","2m_temperature_1993.nc","2m_temperature_1994.nc","2m_temperature_1995.nc","2m_temperature_1996.nc","2m_temperature_1997.nc","2m_temperature_1998.nc","2m_temperature_1999.nc","2m_temperature_2000.nc","2m_temperature_2001.nc","2m_temperature_2002.nc","2m_temperature_2003.nc","2m_temperature_2004.nc","2m_temperature_2005.nc","2m_temperature_2006.nc","2m_temperature_2007.nc","2m_temperature_2008.nc","2m_temperature_2009.nc","2m_temperature_2010.nc","2m_temperature_2011.nc","2m_temperature_2012.nc","2m_temperature_2013.nc","2m_temperature_2014.nc","2m_temperature_2015.nc","2m_temperature_2016.nc","2m_temperature_2017.nc","2m_temperature_2018.nc","2m_temperature_2019.nc","2m_temperature_2020.nc"]
+file_paths = [joinpath(base_path, file) for file in files]
+data_dict = open_mfdataset(file_paths, "t2m")
+#Check for missing values in them
+#Check spatial and temporal dimensions, if it matches with your y dimensions
+
+
+#Split for test and train sets
+
+
+```
+
+
+```{julia}
+# j = 0
+
+# calender = Date.(dates[1]:Day(1):dates[end])
+# for i in 1:length(dates)
+# for date in calender
+# if date == dates[i]
+# j += 1
+# println("match")
+# println(j)
+# end
+# end
+# end
+```
+```{julia}
+start_date = Date(data_dict["time"][1])
+end_date = Date(data_dict["time"][end])
+
+println(start_date)
+println(end_date)
+
+# Calculate the number of days between the two dates
+num_days = (end_date) - (start_date) 
+num_days = Dates.value(num_days) + 1
+num_years = (Dates.year(end_date) - Dates.year(start_date)) + 1
+
+println("Number of days from $(Dates.year(start_date)) to $(Dates.year(end_date)): $num_days and $num_years years" )
+
+n_lon = Int(length(data_dict["longitude"])/(num_years))
+n_lat = Int(length(data_dict["latitude"])/(num_years))
+println("n_lon = $n_lon ")
+println("n_lat = $n_lat ")
+
+data_dict_temp = reshape(data_dict["t2m"], (n_lon,n_lat,num_days*24))
+data_dict_time = data_dict["time"]
+time_entries=[]
+daily_temp = Array{Float64}(undef,n_lon,n_lat,1);
+
+for i in 1:length(data_dict_time)
+    a = data_dict_time[i]
+    year = Dates.year(a)
+    month = Dates.month(a)
+    day = Dates.day(a)
+    time_entry = Date(year,month,day)
+    push!(time_entries,time_entry)
+end
+display(time_entries)
+calender = Date.(time_entries[1]:Day(1):time_entries[end])
+for date in calender
+    indexArray = findall(x->x==date, time_entries)
+    # display(indexArray) 
+    hourly_temp = data_dict_temp[:,:,indexArray]
+    average = mean(hourly_temp,dims=3)
+    display(date)
+    daily_temp = cat(daily_temp,average,dims =3)
+    # daily_temp[:,:,j] = average[:,:,:]
+    # j+=1
+end
+
+display(daily_temp)
+```
+```{julia}
+using CDSAPI
+using NCDatasets
+using StatsBase: shuffle
+
+base_path="data/raw"
+
+files = ["2m_temperature_1990.nc", "2m_temperature_1991.nc","2m_temperature_1992.nc",]#"2m_temperature_1993.nc","2m_temperature_1994.nc","2m_temperature_1995.nc","2m_temperature_1996.nc","2m_temperature_1997.nc","2m_temperature_1998.nc","2m_temperature_1999.nc","2m_temperature_2000.nc","2m_temperature_2001.nc","2m_temperature_2002.nc","2m_temperature_2003.nc","2m_temperature_2004.nc","2m_temperature_2005.nc","2m_temperature_2006.nc","2m_temperature_2007.nc","2m_temperature_2008.nc","2m_temperature_2009.nc","2m_temperature_2010.nc","2m_temperature_2011.nc","2m_temperature_2012.nc","2m_temperature_2013.nc","2m_temperature_2014.nc","2m_temperature_2015.nc","2m_temperature_2016.nc","2m_temperature_2017.nc","2m_temperature_2018.nc","2m_temperature_2019.nc","2m_temperature_2020.nc"]
+
+time_entries_all=[]
+temp_long = []
+temp_lat = []
+j=1
+daily_temp = Array{Float64}(undef,n_lon,n_lat,1);
+display(daily_temp)
+for file in files 
+    display(string(file))
+    file = joinpath(base_path, file)
+    ds=Dataset(file,"r")
+    temp_long = ds["longitude"][:]
+    temp_lat = ds["latitude"][:]
+    temp = ds["t2m"][:,:,:]
+    time = ds["time"][:]
+    time_entries_year = []
+    indexArray = []
+
+    #display(time)
+
+    for i in 1:length(time)
+        a = time[i]
+        year = Dates.year(a)
+        month = Dates.month(a)
+        day = Dates.day(a)
+        time_entry = Date(year,month,day)
+        push!(time_entries_year,time_entry)
+        
+    end
+    display(time_entries_year)
+
+    calender = Date.(time_entries_year[1]:Day(1):time_entries_year[end])
+    #display(calender)
+    append!(time_entries_all,calender)
+    
+
+    for date in calender
+        indexArray = findall(x->x==date, time_entries_year)
+        # display(indexArray) 
+        hourly_temp = temp[:,:,indexArray]
+        average = mean(hourly_temp,dims=3)
+        #display(average)
+        daily_temp = cat(daily_temp,average,dims =3)
+        # daily_temp[:,:,j] = average[:,:,:]
+        # j+=1
+    end
+
+
+
+
+end
+display(daily_temp)
+# display(time_entries)
+# display(temp_lat)
+# display(temp_long)
+# display(daily_temp)
+```
+
+
+```{julia}
+daily_temp_data = copy(daily_temp[:,:,2:end])
+display(daily_temp_data)
+#temp_lat=reverse(temp_lat)
+daily_temp_reverse=reverse(daily_temp_data;dims=1)
+```
+
+
+```{julia}
+
+display(temp_long)
+display(temp_lat)
+display(daily_temp_data[:,:,1])
+
+heatmap(temp_long,temp_lat,transpose(daily_temp_reverse[:,:,20]),xlabel="Longitude",ylabel="Latitude",title="Temperature on $(time_entries_all[20])")
+
+
+```
+
+```{julia}
+
+heatmap(temp_long,temp_lat,daily_temp_reverse,xlabel="Longitude",ylabel="Latitude")
+
+```
+
+
+
+```{julia}
+
+```
+
+
+```{julia}
+
+
+
+```
+
+
+
+
+# Reshaping the data : reshaping to 2D format (lon*lat,time)
+```{julia}
+
+
+
+
+```
