@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 ---
 title: "Project 1"
 subtitle: " Put subtitle here"
@@ -192,3 +193,55 @@ data_dict = open_mfdataset(file_paths, "t2m")
 
 
 ```
+=======
+---
+title: "Lab 07"
+subtitle: "Convergence, Central Limits, and Fat Tails"
+jupyter: julia-1.9
+date: 2023-11-03
+# author: "Your name here (your netID here)" # UNCOMMENT AND ADD YOUR NAME
+
+number-sections: true
+code-annotations: hover
+
+kind: "Lab"
+Module: "3"
+categories:
+    - "Module 3"
+    - "Labs"
+
+format:
+    html: 
+        toc-depth: 3
+    docx: 
+        toc: true
+        toc-depth: 3
+        fig-format: png
+---
+
+
+
+```{julia}
+#| output: false
+using Distributions
+using Plots
+using StatsBase
+using StatsPlots
+
+Plots.default(; margin=4Plots.mm, size=(700, 400), linewidth=2)
+```
+
+
+```{julia}
+
+```
+
+We can calculate its mean and standard deviation
+
+```{julia}
+
+```
+
+Because we're going to be plotting a lot of distributions, let's define a function to do this for us:
+
+>>>>>>> Stashed changes
