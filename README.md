@@ -1,3 +1,1 @@
-# Downscaling project
-
-See instructions on Canvas
+This project downscales precipitation data over Texas by taking coarse resolution air temperature and dew point data and observed fine resolution data of precipitation.
